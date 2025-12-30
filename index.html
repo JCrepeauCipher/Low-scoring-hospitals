@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Definitive Low Rated Hospitals</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Custom Scrollbar for dropdowns */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Animation classes */
+        .fade-in { animation: fadeIn 0.2s ease-out; }
+        .slide-up { animation: slideUp 0.3s ease-out; }
+        .pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .7; } }
+
+        /* Gauge Animation */
+        .gauge-circle {
+            transition: stroke-dashoffset 1s ease-out;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900 selection:bg-indigo-100 selection:text-indigo-900">
+
+    <!-- Navbar -->
+    <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <h1 class="text-xl font-bold text-gray-900">
+                        Definitive Low Rated <span class="font-light text-indigo-600">Hospitals</span>
+                    </h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-sm text-gray-500 hidden sm:block">
+                        <span id="total-records-count">0</span> Records Loaded
+                    </div>
+                    <label class="cursor-pointer bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border border-indigo-200 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        Import CSV
+                        <input type="file" id="csv-upload" accept=".csv" class="hidden" />
+                    </label>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Search & Filter Bar -->
+        <div class="mb-8 space-y-4">
+            <!-- Main Search -->
+            <div class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <input
+                    type="text"
+                    id="search-input"
+                    class="block w-full pl-11 pr-4 py-4 bg-white border border-gray-200 rounded-xl leading-5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-sm"
+                    placeholder="Search by hospital name, city, or IDN..."
+                />
+            </div>
+
+            <!-- Filters Row -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                
+                <!-- State Filter -->
+                <div id="filter-state" class="relative dropdown-container"></div>
+
+                <!-- Patient Rating Filter -->
+                <div id="filter-rating" class="relative dropdown-container"></div>
+
+                <!-- Overall Rating Filter -->
+                <div id="filter-overall" class="relative dropdown-container"></div>
+
+                <!-- Type Filter -->
+                <div id="filter-type" class="relative dropdown-container"></div>
+
+                <!-- Sort Filter -->
+                <div class="relative">
+                    <select id="sort-select" class="appearance-none w-full bg-white border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer shadow-sm h-full">
+                        <option value="fit-desc">Cipher Fit (High to Low)</option>
+                        <option value="fit-asc">Cipher Fit (Low to High)</option>
+                        <option value="revenue-desc">Revenue (High to Low)</option>
+                        <option value="revenue-asc">Revenue (Low to High)</option>
+                        <option value="beds-desc">Beds (High to Low)</option>
+                        <option value="beds-asc">Beds (Low to High)</option>
+                        <option value="rating-desc">Rating (High to Low)</option>
+                        <option value="rating-asc">Rating (Low to High)</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Results Header -->
+        <div class="mb-6 flex justify-between items-end">
+            <h2 class="text-xl font-semibold text-gray-900">Target Accounts</h2>
+            <span id="match-count" class="text-indigo-600 font-mono text-sm">0 matches found</span>
+        </div>
+
+        <!-- List Container -->
+        <div id="list-container" class="space-y-3">
+            <!-- Cards will be injected here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden flex flex-col items-center justify-center py-20 text-gray-500">
+            <svg class="w-16 h-16 mb-4 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <p class="text-lg">No hospitals found matching your criteria.</p>
+            <button id="clear-filters-btn" class="mt-4 text-indigo-600 hover:text-indigo-500 underline">
+                Clear all filters
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Detail Modal -->
+    <div id="modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm transition-opacity opacity-0">
+        <div id="modal-content" class="bg-white border border-gray-200 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl transform scale-95 transition-transform">
+            <!-- Content Injected via JS -->
+        </div>
+    </div>
+
+    <!-- Cipher Fit Analysis Modal -->
+    <div id="fit-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md transition-opacity opacity-0">
+        <div id="fit-modal-content" class="bg-white border border-gray-200 rounded-2xl w-full max-w-lg shadow-2xl transform scale-95 transition-transform overflow-hidden">
+            <!-- Content Injected via JS -->
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- DATA ---
+        let dbData = [
+            { 
+                id: "1940", 
+                name: "Baystate Medical Center", 
+                type: "Short Term Acute Care Hospital", 
+                address: "759 Chestnut St", 
+                city: "Springfield", 
+                state: "MA", 
+                revenue: 1810794512, 
+                beds: 740, 
+                discharges: 40131, 
+                idn: "Baystate Health", 
+                idnParent: "Baystate Health", 
+                hcahpsRating: 4, 
+                overallRating: 2, 
+                readmissionPenalty: "-1.89%", 
+                estRevenueLoss: "-$3,486,838",
+                allCauseRate: "16.40%",
+                allCausePercentile: "4",
+                copdRate: "19.40%",
+                hipKneeRate: "4.40%"
+            },
+            { 
+                id: "2679", 
+                name: "Robert Wood Johnson University Hospital New Brunswick", 
+                type: "Short Term Acute Care Hospital", 
+                address: "1 Robert Wood Johnson Pl", 
+                city: "New Brunswick", 
+                state: "NJ", 
+                revenue: 1758559120, 
+                beds: 600, 
+                discharges: 36561, 
+                idn: "RWJBarnabas Health", 
+                idnParent: "RWJBarnabas Health", 
+                hcahpsRating: 3, 
+                overallRating: 2, 
+                readmissionPenalty: "-2.14%", 
+                estRevenueLoss: "-$3,261,421",
+                allCauseRate: "15.50%",
+                allCausePercentile: "21",
+                copdRate: "17.50%",
+                hipKneeRate: "5.70%"
+            },
+            { 
+                id: "2803", 
+                name: "Maimonides Medical Center", 
+                type: "Short Term Acute Care Hospital", 
+                address: "4802 10th Ave", 
+                city: "Brooklyn", 
+                state: "NY", 
+                revenue: 1758189024, 
+                beds: 641, 
+                discharges: 28420, 
+                idn: "Maimonides Health", 
+                idnParent: "Maimonides Health", 
+                hcahpsRating: 2, 
+                overallRating: 1, 
+                readmissionPenalty: "-0.98%", 
+                estRevenueLoss: "-$1,200,000",
+                allCauseRate: "15.0%",
+                allCausePercentile: "25",
+                copdRate: "18.0%",
+                hipKneeRate: "5.0%"
+            },
+            { 
+                id: "1906", 
+                name: "UM Shore Medical Center at Easton", 
+                type: "Short Term Acute Care Hospital", 
+                address: "219 S Washington St", 
+                city: "Easton", 
+                state: "MD", 
+                revenue: 319601744, 
+                beds: 48, 
+                discharges: 6420, 
+                idn: "University of Maryland Shore Regional Health", 
+                idnParent: "University of Maryland Medical System", 
+                hcahpsRating: 3, 
+                overallRating: 2, 
+                readmissionPenalty: "0.00%", 
+                estRevenueLoss: "$0",
+                allCauseRate: "12.60%",
+                allCausePercentile: "99",
+                copdRate: "16.90%",
+                hipKneeRate: "5.30%"
+            },
+            { 
+                id: "1891", 
+                name: "UM Upper Chesapeake Medical Center", 
+                type: "Short Term Acute Care Hospital", 
+                address: "500 Upper Chesapeake Dr", 
+                city: "Bel Air", 
+                state: "MD", 
+                revenue: 398557862, 
+                beds: 203, 
+                discharges: 12299, 
+                idn: "University of Maryland Upper Chesapeake Health", 
+                idnParent: "University of Maryland Medical System", 
+                hcahpsRating: 3, 
+                overallRating: 2, 
+                readmissionPenalty: "-0.45%", 
+                estRevenueLoss: "-$150,000",
+                allCauseRate: "14.50%",
+                allCausePercentile: "81",
+                copdRate: "19.10%",
+                hipKneeRate: "5.10%"
+            },
+            { 
+                id: "1920", 
+                name: "University of Maryland Medical Center", 
+                type: "Short Term Acute Care Hospital", 
+                address: "22 S Greene St", 
+                city: "Baltimore", 
+                state: "MD", 
+                revenue: 2204569824, 
+                beds: 767, 
+                discharges: 23420, 
+                idn: "University of Maryland Medical System", 
+                idnParent: "University of Maryland Medical System", 
+                hcahpsRating: 3, 
+                overallRating: 2, 
+                readmissionPenalty: "-1.10%", 
+                estRevenueLoss: "-$2,100,000",
+                allCauseRate: "14.30%",
+                allCausePercentile: "88",
+                copdRate: "18.20%",
+                hipKneeRate: ""
+            },
+            { 
+                id: "3884", 
+                name: "UT Health Pittsburg", 
+                type: "Critical Access Hospital", 
+                address: "2701 US-271 N", 
+                city: "Pittsburg", 
+                state: "TX", 
+                revenue: 39334230, 
+                beds: 25, 
+                discharges: 752, 
+                idn: "UT Health East Texas", 
+                idnParent: "Ardent", 
+                hcahpsRating: 5, 
+                overallRating: 3, 
+                readmissionPenalty: "0.00%", 
+                estRevenueLoss: "$0",
+                allCauseRate: "14.50%",
+                allCausePercentile: "81",
+                copdRate: "",
+                hipKneeRate: ""
+            }
+        ];
+
+        // --- STATE MANAGEMENT ---
+        const state = {
+            searchTerm: '',
+            filters: {
+                states: [],
+                ratings: [],
+                overallRatings: [],
+                types: []
+            },
+            sortBy: 'fit-desc'
+        };
+
+        // --- UTILS ---
+        const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0, notation: "compact", compactDisplay: "short" }).format(val);
+        const formatNumber = (val) => new Intl.NumberFormat('en-US').format(val);
+        const getRatingColor = (r) => 'text-indigo-700 bg-indigo-50';
+        
+        // Star Icon Generator - Updated to use Indigo color
+        const renderStars = (count, max = 5, className = "w-4 h-4") => {
+            let html = '<div class="flex gap-0.5">';
+            for (let i = 0; i < max; i++) {
+                const colorClass = i < count ? 'text-indigo-500 fill-indigo-500' : 'text-gray-200 fill-gray-100';
+                html += `<svg class="${className} ${colorClass}" fill="currentColor" viewBox="0 0 24 24" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+            }
+            html += '</div>';
+            return html;
+        };
+
+        // --- CSV PARSING ---
+        function parseCSV(text) {
+            const rows = [];
+            let row = [];
+            let inQuote = false;
+            let currentToken = '';
+            
+            for (let i = 0; i < text.length; i++) {
+                let char = text[i];
+                let nextChar = text[i+1];
+                
+                if (inQuote) {
+                    if (char === '"' && nextChar === '"') {
+                        currentToken += '"';
+                        i++;
+                    } else if (char === '"') {
+                        inQuote = false;
+                    } else {
+                        currentToken += char;
+                    }
+                } else {
+                    if (char === '"') {
+                        inQuote = true;
+                    } else if (char === ',') {
+                        row.push(currentToken);
+                        currentToken = '';
+                    } else if (char === '\n' || char === '\r') {
+                        if (currentToken || row.length > 0) row.push(currentToken);
+                        if (row.length > 0) rows.push(row);
+                        row = [];
+                        currentToken = '';
+                        if (char === '\r' && nextChar === '\n') i++;
+                    } else {
+                        currentToken += char;
+                    }
+                }
+            }
+            if (currentToken || row.length > 0) {
+                row.push(currentToken);
+                rows.push(row);
+            }
+            return rows;
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = parseCSV(text);
+                
+                if (rows.length < 2) return; 
+
+                // Dynamic Column Mapping
+                const header = rows[0].map(h => h.trim().toLowerCase());
+                
+                const getIndex = (keywords) => header.findIndex(h => keywords.some(k => h.includes(k.toLowerCase())));
+
+                const colMap = {
+                    id: getIndex(['Definitive ID', 'ID']),
+                    name: getIndex(['Hospital Name', 'Name']),
+                    type: getIndex(['Hospital Type', 'Type']),
+                    address: getIndex(['Address']),
+                    city: getIndex(['City']),
+                    state: getIndex(['State']),
+                    revenue: getIndex(['Total Revenues', 'Revenue']),
+                    beds: getIndex(['Staffed Beds', 'Beds']),
+                    discharges: getIndex(['Discharges']),
+                    idn: getIndex(['IDN', 'Network']),
+                    idnParent: getIndex(['IDN Parent', 'Parent']),
+                    hcahps: getIndex(['Patient Survey', 'HCAHPS']),
+                    overall: getIndex(['Hospital Compare Overall', 'Overall Rating']),
+                    penalty: getIndex(['Penalty', 'Readmission Rate Penalty']),
+                    loss: getIndex(['Loss', 'Revenue Loss']),
+                    allCauseRate: getIndex(['All Cause Hospital-Wide Readmission Rate', 'All Cause', 'Wide Readmission Rate']),
+                    allCausePercentile: getIndex(['All Cause Hospital-Wide Readmission Percentile', 'All Cause Percentile']),
+                    copdRate: getIndex(['COPD', 'Obstructive Pulmonary']),
+                    hipKneeRate: getIndex(['Hip/Knee', 'Hip', 'Knee'])
+                };
+
+                const newData = rows.slice(1).map(row => {
+                    if (row.length < 5) return null; // Skip empty rows
+                    
+                    const getVal = (idx) => idx !== -1 && row[idx] ? row[idx] : '';
+
+                    const cleanMoney = (val) => val ? parseInt(val.replace(/[$,]/g, '')) : 0;
+                    const cleanInt = (val) => val ? parseInt(val.replace(/,/g, '')) : 0;
+                    const cleanRating = (val) => {
+                        const parsed = parseInt(val);
+                        return isNaN(parsed) ? 0 : parsed;
+                    }
+
+                    return {
+                        id: getVal(colMap.id),
+                        name: getVal(colMap.name),
+                        type: getVal(colMap.type),
+                        address: getVal(colMap.address),
+                        city: getVal(colMap.city),
+                        state: getVal(colMap.state),
+                        revenue: cleanMoney(getVal(colMap.revenue)),
+                        beds: cleanInt(getVal(colMap.beds)),
+                        discharges: cleanInt(getVal(colMap.discharges)),
+                        idn: getVal(colMap.idn),
+                        idnParent: getVal(colMap.idnParent),
+                        hcahpsRating: cleanRating(getVal(colMap.hcahps)),
+                        overallRating: cleanRating(getVal(colMap.overall)),
+                        readmissionPenalty: getVal(colMap.penalty),
+                        estRevenueLoss: getVal(colMap.loss),
+                        allCauseRate: getVal(colMap.allCauseRate),
+                        allCausePercentile: getVal(colMap.allCausePercentile),
+                        copdRate: getVal(colMap.copdRate),
+                        hipKneeRate: getVal(colMap.hipKneeRate)
+                    };
+                }).filter(item => item !== null);
+
+                if (newData.length > 0) {
+                    dbData = newData;
+                    // Reset Filters
+                    state.filters = { states: [], ratings: [], overallRatings: [], types: [] };
+                    state.searchTerm = '';
+                    document.getElementById('search-input').value = '';
+                    init(); 
+                } else {
+                    alert('Error: Could not parse columns from CSV. Please check the file format.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+
+        // --- UI COMPONENT: MULTI-SELECT ---
+        function setupMultiSelect(containerId, label, options, selectedValues, onChange, isStarRating = false) {
+            const container = document.getElementById(containerId);
+            
+            const getLabel = () => {
+                if (selectedValues.length === 0) return `All ${label}s`;
+                if (selectedValues.length === 1 && typeof selectedValues[0] === 'string') return selectedValues[0];
+                if (selectedValues.length === 1 && typeof selectedValues[0] === 'number') return `${selectedValues[0]} Stars`;
+                return `${selectedValues.length} ${label}s`;
+            };
+
+            const render = () => {
+                const isOpen = container.dataset.open === 'true';
+                
+                // Toggle Button HTML
+                let html = `
+                    <button class="dropdown-toggle-btn w-full flex items-center justify-between bg-white border ${isOpen ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-gray-200'} text-gray-700 py-3 px-4 rounded-lg focus:outline-none transition-all shadow-sm hover:border-gray-300 group">
+                        <div class="flex items-center gap-2 truncate">
+                            ${selectedValues.length > 0 ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs font-bold">${selectedValues.length}</span>` : ''}
+                            <span class="truncate ${selectedValues.length > 0 ? 'font-medium text-indigo-900' : 'text-gray-600'}">${getLabel()}</span>
+                        </div>
+                        <svg class="h-4 w-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                `;
+
+                if (isOpen) {
+                    html += `
+                        <div class="absolute z-50 w-full min-w-[220px] mt-2 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100 left-0">
+                            <div class="max-h-64 overflow-y-auto p-1 custom-scrollbar">
+                                <button class="dropdown-all-btn w-full text-left px-3 py-2 rounded-md flex items-center gap-2 hover:bg-gray-50 transition-colors mb-1 ${selectedValues.length === 0 ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-700'}">
+                                    <div class="w-4 h-4 rounded border flex items-center justify-center ${selectedValues.length === 0 ? 'border-indigo-500 bg-indigo-500' : 'border-gray-300 bg-white'}">
+                                        ${selectedValues.length === 0 ? '<svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>' : ''}
+                                    </div>
+                                    <span>All ${label}s</span>
+                                </button>
+                                <div class="border-t border-gray-100 my-1"></div>
+                    `;
+
+                    options.forEach(opt => {
+                        const isSelected = selectedValues.includes(opt);
+                        const displayVal = isStarRating ? `<div class="flex items-center gap-2"><span class="font-mono font-bold text-gray-500 w-4">${opt}</span>${renderStars(opt)}</div>` : opt;
+                        
+                        html += `
+                            <button data-val="${opt}" class="dropdown-option-btn w-full text-left px-3 py-2 rounded-md flex items-center gap-3 hover:bg-gray-50 transition-colors ${isSelected ? 'bg-indigo-50/50' : ''}">
+                                <div class="w-4 h-4 rounded border flex items-center justify-center transition-colors ${isSelected ? 'border-indigo-500 bg-indigo-500' : 'border-gray-300 bg-white group-hover:border-indigo-300'}">
+                                    ${isSelected ? '<svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>' : ''}
+                                </div>
+                                <div class="flex-grow ${isSelected ? 'text-indigo-900 font-medium' : 'text-gray-700'}">${displayVal}</div>
+                            </button>
+                        `;
+                    });
+
+                    html += `</div></div>`;
+                }
+
+                container.innerHTML = html;
+
+                // ATTACH LISTENERS (Fixes issue with inline onclick not finding scope)
+                
+                // Toggle
+                const toggleBtn = container.querySelector('.dropdown-toggle-btn');
+                if (toggleBtn) {
+                    toggleBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleDropdown(containerId);
+                    });
+                }
+
+                if (isOpen) {
+                    // All Button
+                    const allBtn = container.querySelector('.dropdown-all-btn');
+                    if (allBtn) {
+                        allBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            onChange([]);
+                            renderList();
+                            refreshDropdowns();
+                        });
+                    }
+
+                    // Options
+                    container.querySelectorAll('.dropdown-option-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            let val = btn.dataset.val;
+                            if (isStarRating) val = parseInt(val);
+                            
+                            const idx = selectedValues.indexOf(val);
+                            if (idx > -1) {
+                                // Deselect
+                                const newVal = selectedValues.filter(v => v !== val);
+                                onChange(newVal);
+                            } else {
+                                // Select
+                                const newVal = [...selectedValues, val];
+                                onChange(newVal);
+                            }
+                            
+                            renderList();
+                            refreshDropdowns();
+                        });
+                    });
+                }
+            };
+
+            render();
+        }
+
+        // Global Helpers for Dropdowns
+        function toggleDropdown(id) {
+            const el = document.getElementById(id);
+            const wasOpen = el.dataset.open === 'true';
+            
+            document.querySelectorAll('.dropdown-container').forEach(d => {
+                d.dataset.open = 'false';
+            });
+
+            if (!wasOpen) {
+                el.dataset.open = 'true';
+            }
+            refreshDropdowns();
+        }
+        
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.dropdown-container')) {
+                let changed = false;
+                document.querySelectorAll('.dropdown-container').forEach(d => {
+                    if (d.dataset.open === 'true') {
+                        d.dataset.open = 'false';
+                        changed = true;
+                    }
+                });
+                if (changed) refreshDropdowns();
+            }
+        });
+
+        function refreshDropdowns() {
+            const uniqueStates = [...new Set(dbData.map(d => d.state))].sort();
+            const uniqueTypes = [...new Set(dbData.map(d => d.type))].sort();
+            const ratingOptions = [5, 4, 3, 2, 1];
+
+            setupMultiSelect('filter-state', 'State', uniqueStates, state.filters.states, (newVal) => { state.filters.states = newVal; });
+            setupMultiSelect('filter-type', 'Type', uniqueTypes, state.filters.types, (newVal) => { state.filters.types = newVal; });
+            setupMultiSelect('filter-rating', 'Patient Rating', ratingOptions, state.filters.ratings, (newVal) => { state.filters.ratings = newVal; }, true);
+            setupMultiSelect('filter-overall', 'Overall Rating', ratingOptions, state.filters.overallRatings, (newVal) => { state.filters.overallRatings = newVal; }, true);
+        }
+
+        // --- ALGORITHM: CIPHER FIT SCORE ---
+        function calculateCipherFit(item) {
+            // 1. Rating Impact (40%)
+            // Lower rating is better prospect.
+            // 1 star = 100, 2 stars = 75, 3 stars = 50, 4 stars = 25, 5 stars = 0
+            const ratingScore = item.overallRating ? (6 - item.overallRating) * 20 : 50; 
+
+            // 2. Readmission Percentile Impact (35%)
+            // CORRECTION: Based on data, High Percentile = Good Performance (Low Rate).
+            // Therefore, we want LOW percentiles for high prospects.
+            const percentileVal = parseInt(item.allCausePercentile) || 50; 
+            const percentileScore = 100 - percentileVal; // Inverted: Low percentile gets high score
+
+            // 3. Financial Penalty Impact (25%)
+            // Parse penalty (remove negative sign and %).
+            // Cap at 3.0% for max score.
+            let penaltyVal = 0;
+            if (item.readmissionPenalty) {
+                penaltyVal = Math.abs(parseFloat(item.readmissionPenalty.replace(/[^0-9.-]/g, '')));
+            }
+            const penaltyScore = Math.min((penaltyVal / 3.0) * 100, 100);
+
+            // Weighted Average
+            const totalScore = Math.round((ratingScore * 0.4) + (percentileScore * 0.35) + (penaltyScore * 0.25));
+            
+            let strategy = "General Inquiry";
+            let strategyColor = "text-gray-600";
+            
+            if (totalScore >= 80) {
+                strategy = "Prime Target: Full Value Proposition";
+                strategyColor = "text-red-600";
+            } else if (totalScore >= 60) {
+                if (penaltyScore > 70) {
+                    strategy = "Focus: Financial Loss Mitigation";
+                    strategyColor = "text-orange-600";
+                } else if (ratingScore > 70) {
+                    strategy = "Focus: Quality Improvement";
+                    strategyColor = "text-indigo-600";
+                } else {
+                    strategy = "Discovery: Identify Pain Points";
+                    strategyColor = "text-blue-600";
+                }
+            } else {
+                strategy = "Low Priority: Maintain Relationship";
+                strategyColor = "text-gray-500";
+            }
+
+            return { score: totalScore, ratingScore, percentileScore, penaltyScore, strategy, strategyColor };
+        }
+
+        // --- GLOBAL MODAL FUNCTIONS ---
+        // Defined here so they are hoisted and available globally
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalContent = document.getElementById('modal-content');
+        
+        function openModal(data) {
+            modalContent.innerHTML = `
+                <!-- Header -->
+                <div class="sticky top-0 bg-white/95 backdrop-blur border-b border-gray-200 p-6 flex justify-between items-start z-10">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-1">${data.name}</h2>
+                        <div class="flex items-center text-gray-500 text-sm">
+                            <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                            ${data.address}, ${data.city}, ${data.state}
+                        </div>
+                    </div>
+                    <button onclick="closeModal()" class="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-900">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="p-6 space-y-6">
+                    <!-- Key Metrics Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <div class="text-gray-500 text-xs uppercase tracking-wider mb-1">Total Revenue</div>
+                            <div class="text-xl font-bold text-gray-900">${formatCurrency(data.revenue)}</div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <div class="text-gray-500 text-xs uppercase tracking-wider mb-1">Staffed Beds</div>
+                            <div class="text-xl font-bold text-gray-900">${data.beds}</div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <div class="text-gray-500 text-xs uppercase tracking-wider mb-1">Discharges</div>
+                            <div class="text-xl font-bold text-gray-900">${formatNumber(data.discharges)}</div>
+                        </div>
+                    </div>
+
+                    <!-- Affiliation -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                            Network & Affiliation
+                        </h3>
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <div class="text-gray-500 text-xs mb-1">IDN Name</div>
+                                    <div class="text-gray-900 font-medium">${data.idn || 'N/A'}</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-500 text-xs mb-1">Parent Network</div>
+                                    <div class="text-gray-900 font-medium">${data.idnParent || 'N/A'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clinical Readmission Metrics (NEW) -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            Clinical Readmission Metrics
+                        </h3>
+                        <div class="bg-indigo-50/50 rounded-lg p-4 border border-indigo-100">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div>
+                                    <div class="text-gray-500 text-xs mb-1">All Cause Rate</div>
+                                    <div class="text-indigo-900 font-bold font-mono">${data.allCauseRate || 'N/A'}</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-500 text-xs mb-1">All Cause %tile</div>
+                                    <div class="text-indigo-900 font-bold font-mono">${data.allCausePercentile || 'N/A'}</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-500 text-xs mb-1">COPD Rate</div>
+                                    <div class="text-indigo-900 font-bold font-mono">${data.copdRate || 'N/A'}</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-500 text-xs mb-1">Hip/Knee Rate</div>
+                                    <div class="text-indigo-900 font-bold font-mono">${data.hipKneeRate || 'N/A'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quality & Financial Impact -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            Quality & Financial Impact
+                        </h3>
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <div class="text-gray-500 text-xs mb-2">Patient Survey (HCAHPS)</div>
+                                    <div class="flex items-center">
+                                        ${renderStars(data.hcahpsRating)}
+                                        <span class="ml-2 text-gray-900 font-medium">${data.hcahpsRating}/5</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-500 text-xs mb-2">Overall Hospital Rating</div>
+                                    <div class="flex items-center">
+                                        <span class="px-3 py-1 rounded-full text-sm font-bold ${getRatingColor(data.overallRating)}">
+                                            ${data.overallRating} / 5
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-span-1 md:col-span-2 border-t border-gray-200 pt-4 mt-2">
+                                    <div class="flex items-start p-3 bg-rose-50 border border-rose-200 rounded-lg">
+                                        <svg class="w-5 h-5 text-rose-500 mr-3 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                        <div>
+                                            <div class="text-rose-900 font-medium text-sm">Readmission Penalty Risk</div>
+                                            <div class="text-gray-600 text-xs mt-1">
+                                                Est. FY2026 Loss: <span class="text-gray-900 font-mono font-medium">${data.estRevenueLoss}</span> 
+                                                <span class="mx-2 text-gray-300">|</span>
+                                                Penalty Rate: <span class="text-gray-900 font-mono font-medium">${data.readmissionPenalty}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modalOverlay.classList.remove('hidden');
+            setTimeout(() => {
+                modalOverlay.classList.remove('opacity-0');
+                modalOverlay.querySelector('div').classList.remove('scale-95');
+                modalOverlay.querySelector('div').classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            modalOverlay.classList.add('opacity-0');
+            modalOverlay.querySelector('div').classList.remove('scale-100');
+            modalOverlay.querySelector('div').classList.add('scale-95');
+            setTimeout(() => {
+                modalOverlay.classList.add('hidden');
+            }, 200);
+        }
+
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeModal();
+        });
+
+        // Fit Modal Globals
+        const fitModalOverlay = document.getElementById('fit-modal-overlay');
+        const fitModalContent = document.getElementById('fit-modal-content');
+
+        function showCipherFit(event, id) {
+            event.stopPropagation(); // Prevent opening the main details modal
+            
+            const item = dbData.find(d => d.id === id);
+            if (!item) return;
+
+            const analysis = calculateCipherFit(item);
+            
+            // Calculate Circle Stroke for Gauge (Radius 40 -> Circumference ~251)
+            const circumference = 2 * Math.PI * 40;
+            const offset = circumference - ((analysis.score / 100) * circumference);
+            
+            // Color based on score
+            let color = 'text-gray-400';
+            if (analysis.score >= 80) color = 'text-red-500'; // Hot lead
+            else if (analysis.score >= 60) color = 'text-orange-500';
+            else color = 'text-indigo-500';
+
+            fitModalContent.innerHTML = `
+                <div class="bg-gradient-to-br from-gray-900 to-gray-800 text-white p-6 relative overflow-hidden">
+                    <!-- Background decoration -->
+                    <div class="absolute top-0 right-0 -mt-10 -mr-10 w-32 h-32 bg-indigo-500 rounded-full blur-3xl opacity-20"></div>
+                    
+                    <button onclick="closeFitModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+
+                    <div class="flex items-center gap-6">
+                        <!-- Gauge -->
+                        <div class="relative w-24 h-24 flex-shrink-0">
+                            <svg class="w-full h-full transform -rotate-90">
+                                <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="8" fill="transparent" class="text-gray-700" />
+                                <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="8" fill="transparent" class="${color} gauge-circle" style="stroke-dasharray: ${circumference}; stroke-dashoffset: ${offset};" />
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center flex-col">
+                                <span class="text-2xl font-bold font-mono">${analysis.score}</span>
+                                <span class="text-[10px] uppercase tracking-wide text-gray-400">Score</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h2 class="text-xl font-bold mb-1">Cipher Fit Analysis</h2>
+                            <p class="text-sm text-gray-400 font-mono">${item.name}</p>
+                            <div class="mt-3 inline-block bg-white/10 backdrop-blur px-3 py-1 rounded text-xs font-semibold border border-white/20">
+                                ${analysis.strategy}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 space-y-4">
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Scoring Factors</h3>
+                    
+                    <!-- Factor 1: Quality -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">Rating Opportunity</div>
+                                <div class="text-xs text-gray-500">Actual Rating: <span class="font-semibold text-gray-700">${item.overallRating || 'N/A'} Stars</span></div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-bold text-gray-900">${Math.round(analysis.ratingScore)} pts</div>
+                            <div class="w-20 h-1.5 bg-gray-100 rounded-full mt-1 overflow-hidden">
+                                <div class="h-full bg-indigo-500" style="width: ${analysis.ratingScore}%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Factor 2: Readmission -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-red-50 rounded-lg text-red-600">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">Readmission Opportunity</div>
+                                <div class="text-xs text-gray-500">Actual Percentile: <span class="font-semibold text-gray-700">${item.allCausePercentile || 'N/A'}</span> (Low = High Rate)</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-bold text-gray-900">${analysis.percentileScore} pts</div>
+                            <div class="w-20 h-1.5 bg-gray-100 rounded-full mt-1 overflow-hidden">
+                                <div class="h-full bg-red-500" style="width: ${analysis.percentileScore}%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Factor 3: Financial -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-green-50 rounded-lg text-green-600">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">Financial Impact</div>
+                                <div class="text-xs text-gray-500">Actual Penalty: <span class="font-semibold text-gray-700">${item.readmissionPenalty || '0.00%'}</span></div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-bold text-gray-900">${Math.round(analysis.penaltyScore)} pts</div>
+                            <div class="w-20 h-1.5 bg-gray-100 rounded-full mt-1 overflow-hidden">
+                                <div class="h-full bg-green-500" style="width: ${analysis.penaltyScore}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            fitModalOverlay.classList.remove('hidden');
+            setTimeout(() => {
+                fitModalOverlay.classList.remove('opacity-0');
+                fitModalOverlay.querySelector('div').classList.remove('scale-95');
+                fitModalOverlay.querySelector('div').classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeFitModal() {
+            fitModalOverlay.classList.add('opacity-0');
+            fitModalOverlay.querySelector('div').classList.remove('scale-100');
+            fitModalOverlay.querySelector('div').classList.add('scale-95');
+            setTimeout(() => {
+                fitModalOverlay.classList.add('hidden');
+            }, 200);
+        }
+
+        fitModalOverlay.addEventListener('click', (e) => {
+            if (e.target === fitModalOverlay) closeFitModal();
+        });
+
+        // --- RENDER LOGIC ---
+
+        function init() {
+            document.getElementById('total-records-count').textContent = dbData.length;
+            refreshDropdowns();
+            renderList();
+        }
+
+        function getFilteredData() {
+            return dbData.filter(item => {
+                const matchesSearch = 
+                    (item.name || '').toLowerCase().includes(state.searchTerm.toLowerCase()) ||
+                    (item.city || '').toLowerCase().includes(state.searchTerm.toLowerCase()) ||
+                    (item.idn || '').toLowerCase().includes(state.searchTerm.toLowerCase());
+
+                const matchesState = state.filters.states.length === 0 || state.filters.states.includes(item.state);
+                const matchesType = state.filters.types.length === 0 || state.filters.types.includes(item.type);
+                const matchesRating = state.filters.ratings.length === 0 || state.filters.ratings.includes(item.hcahpsRating);
+                const matchesOverall = state.filters.overallRatings.length === 0 || state.filters.overallRatings.includes(item.overallRating);
+
+                return matchesSearch && matchesState && matchesType && matchesRating && matchesOverall;
+            }).sort((a, b) => {
+                switch (state.sortBy) {
+                    case 'fit-desc': return calculateCipherFit(b).score - calculateCipherFit(a).score;
+                    case 'fit-asc': return calculateCipherFit(a).score - calculateCipherFit(b).score;
+                    case 'revenue-desc': return b.revenue - a.revenue;
+                    case 'revenue-asc': return a.revenue - b.revenue;
+                    case 'beds-desc': return b.beds - a.beds;
+                    case 'beds-asc': return a.beds - b.beds;
+                    case 'rating-desc': return b.hcahpsRating - a.hcahpsRating;
+                    case 'rating-asc': return a.hcahpsRating - b.hcahpsRating;
+                    default: return 0;
+                }
+            });
+        }
+
+        function renderList() {
+            const data = getFilteredData();
+            const container = document.getElementById('list-container');
+            const emptyState = document.getElementById('empty-state');
+            const matchCount = document.getElementById('match-count');
+
+            matchCount.textContent = `${data.length} matches found`;
+            container.innerHTML = '';
+
+            if (data.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            data.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'group relative bg-white hover:bg-gray-50 border border-gray-200 hover:border-indigo-300 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 cursor-pointer flex flex-col md:flex-row items-start md:items-center p-4 gap-4 slide-up';
+                
+                // We store the ID in data attribute for easy access if needed
+                card.dataset.id = item.id;
+                
+                // Calculate Fit for Badge
+                const fitAnalysis = calculateCipherFit(item);
+                let badgeClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                if (fitAnalysis.score >= 80) badgeClass = 'bg-red-50 text-red-700 border-red-200';
+                else if (fitAnalysis.score >= 60) badgeClass = 'bg-orange-50 text-orange-700 border-orange-200';
+
+                card.innerHTML = `
+                    <div class="flex-grow min-w-0">
+                        <div class="flex items-center gap-3 mb-1">
+                            <h3 class="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition-colors truncate">${item.name}</h3>
+                            <div class="hidden sm:block bg-indigo-50 text-indigo-700 text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wide shrink-0">${item.state}</div>
+                        </div>
+                        <div class="flex flex-wrap items-center text-gray-500 text-sm gap-x-3 gap-y-1">
+                            <div class="flex items-center">
+                                <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                ${item.city}, ${item.state}
+                            </div>
+                            <span class="hidden sm:inline text-gray-300">|</span>
+                            <span class="text-xs text-gray-400 truncate">${item.idn || 'No IDN'}</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 w-full md:w-auto gap-4 md:flex md:items-center md:gap-8 md:pr-4">
+                        <div class="bg-gray-100 md:bg-transparent p-2 md:p-0 rounded border border-gray-200 md:border-0">
+                           <div class="flex items-center text-gray-500 text-xs mb-0.5 md:justify-end">
+                              <svg class="w-3 h-3 mr-1 md:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                              <span class="uppercase tracking-wider">Revenue</span>
+                           </div>
+                           <div class="text-gray-900 font-mono text-sm font-semibold md:text-right">${formatCurrency(item.revenue)}</div>
+                        </div>
+
+                        <div class="bg-gray-100 md:bg-transparent p-2 md:p-0 rounded border border-gray-200 md:border-0">
+                           <div class="flex items-center text-gray-500 text-xs mb-0.5 md:justify-end">
+                              <svg class="w-3 h-3 mr-1 md:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                              <span class="uppercase tracking-wider">Beds</span>
+                           </div>
+                           <div class="text-gray-900 font-mono text-sm font-semibold md:text-right">${item.beds}</div>
+                        </div>
+
+                        <div class="bg-gray-100 md:bg-transparent p-2 md:p-0 rounded border border-gray-200 md:border-0">
+                           <div class="flex items-center text-gray-500 text-xs mb-0.5 md:justify-end">
+                               <span class="uppercase tracking-wider">Ratings</span>
+                           </div>
+                           <div class="flex flex-col md:items-end gap-1">
+                             <div class="flex items-center gap-1" title="Patient Survey Rating">
+                                <span class="text-[10px] text-gray-400 uppercase font-semibold">Pat.</span>
+                                ${renderStars(item.hcahpsRating, 5, "w-3 h-3")}
+                             </div>
+                             <div class="flex items-center gap-1" title="Overall Hospital Rating">
+                                <span class="text-[10px] text-gray-400 uppercase font-semibold">Overall</span>
+                                ${renderStars(item.overallRating, 5, "w-3 h-3")}
+                             </div>
+                           </div>
+                        </div>
+                    </div>
+
+                    <!-- Graph/Fit Icon Trigger -->
+                    <div class="hidden md:flex flex-col items-center justify-center pl-4 border-l border-gray-200 min-w-[80px] h-full cursor-pointer group/icon" onclick="showCipherFit(event, '${item.id}')">
+                        <div class="flex flex-col items-center justify-center h-full w-full py-2 hover:bg-gray-50 transition-colors rounded-r-xl">
+                            <div class="mb-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${badgeClass}">
+                                Fit: ${fitAnalysis.score}
+                            </div>
+                            <div class="p-1.5 rounded-full text-gray-400 group-hover/icon:text-indigo-600 transition-colors">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add click event for the card directly instead of relying on openModalById
+                card.onclick = (e) => {
+                    // Prevent firing if we clicked the fit icon (handled by onclick on div above)
+                    // But since fit icon also uses stopPropagation, it should be fine.
+                    // However, we need to ensure we don't catch the bubbling if stopPropagation wasn't enough or used correctly.
+                    openModal(item);
+                };
+
+                container.appendChild(card);
+            });
+        }
+
+        // --- GLOBAL EVENT LISTENERS ---
+        window.addEventListener('DOMContentLoaded', () => {
+            // Search Input
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                state.searchTerm = e.target.value;
+                renderList();
+            });
+
+            // Sort Select
+            document.getElementById('sort-select').addEventListener('change', (e) => {
+                state.sortBy = e.target.value;
+                renderList();
+            });
+
+            // Clear Filters
+            document.getElementById('clear-filters-btn').addEventListener('click', () => {
+                state.searchTerm = '';
+                document.getElementById('search-input').value = '';
+                state.filters = { states: [], ratings: [], overallRatings: [], types: [] };
+                refreshDropdowns();
+                renderList();
+            });
+
+            // File Upload Listener
+            document.getElementById('csv-upload').addEventListener('change', handleFileUpload);
+
+            // Initial Load
+            init();
+        });
+
+    </script>
+</body>
+</html>
