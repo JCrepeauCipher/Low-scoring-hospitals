@@ -50,7 +50,16 @@
                     <div class="text-sm text-gray-500 hidden sm:block">
                         <span id="total-records-count">0</span> Records Loaded
                     </div>
-                    <!-- Upload Button (Hidden for end users, useful for admin updates) -->
+                    
+                    <!-- Download Button -->
+                    <button onclick="downloadCSV()" class="hidden sm:flex bg-white hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border border-gray-200 items-center gap-2 group">
+                        <svg class="w-4 h-4 text-gray-500 group-hover:text-indigo-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        Download Data
+                    </button>
+
+                    <!-- Upload Button -->
                     <label class="cursor-pointer bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border border-indigo-200 flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -133,31 +142,58 @@
     <div id="fit-modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md transition-opacity opacity-0">
         <div id="fit-modal-content" class="bg-white border border-gray-200 rounded-2xl w-full max-w-lg shadow-2xl transform scale-95 transition-transform overflow-hidden"></div>
     </div>
+    
+    <!-- Email Modal -->
+    <div id="email-modal-overlay" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm transition-opacity opacity-0">
+        <div id="email-modal-content" class="bg-white border border-gray-200 rounded-xl w-full max-w-2xl shadow-2xl transform scale-95 transition-transform">
+             <div class="border-b border-gray-100 p-4 flex justify-between items-center bg-gray-50 rounded-t-xl">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                    Generate Email
+                </h3>
+                <button onclick="closeEmailModal()" class="text-gray-400 hover:text-gray-600"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+             </div>
+             <div class="p-6">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email Preview</label>
+                    <textarea id="email-textarea" class="w-full h-64 p-4 border border-gray-200 rounded-lg text-sm text-gray-800 font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none bg-gray-50"></textarea>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button onclick="closeEmailModal()" class="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
+                    <button onclick="copyEmailToClipboard()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm shadow-indigo-500/30 flex items-center gap-2 transition-colors">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                        Copy to Clipboard
+                    </button>
+                </div>
+             </div>
+        </div>
+    </div>
 
     <!-- JavaScript Logic -->
     <script>
-        // --- DATA SECTION ---
         
-        // PASTE YOUR 800 ROWS OF DATA HERE.
-        // Replace everything between the brackets [ ... ] with the content of Example.txt
-        let dbData = [
-            { id: "1940", name: "Baystate Medical Center", type: "Short Term Acute Care Hospital", address: "", city: "Springfield", state: "MA", revenue: 1810794512, beds: 740, discharges: 40131, idn: "Baystate Health", idnParent: "", hcahpsRating: 2, overallRating: 1, readmissionPenalty: "-1.89%", estRevenueLoss: "-$3,486,838", allCauseRate: "16.40%", allCausePercentile: "4", copdRate: "19.40%", hipKneeRate: "4.40%" },
-            { id: "2679", name: "Robert Wood Johnson University Hospital New Brunswick", type: "Short Term Acute Care Hospital", address: "", city: "New Brunswick", state: "NJ", revenue: 1758559120, beds: 600, discharges: 36561, idn: "RWJBarnabas Health", idnParent: "RWJBarnabas Health", hcahpsRating: 3, overallRating: 2, readmissionPenalty: "-2.14%", estRevenueLoss: "-$3,261,421", allCauseRate: "15.50%", allCausePercentile: "21", copdRate: "17.50%", hipKneeRate: "5.70%" },
-            { id: "2803", name: "Maimonides Medical Center", type: "Short Term Acute Care Hospital", address: "", city: "Brooklyn", state: "NY", revenue: 1758189024, beds: 641, discharges: 28282, idn: "Maimonides Health", idnParent: "", hcahpsRating: 2, overallRating: 2, readmissionPenalty: "-1.00%", estRevenueLoss: "-$1,200,000", allCauseRate: "17.20%", allCausePercentile: "1", copdRate: "18.0%", hipKneeRate: "5.0%" },
-            { id: "1906", name: "UM Shore Medical Center at Easton", type: "Short Term Acute Care Hospital", address: "", city: "Easton", state: "MD", revenue: 319601744, beds: 48, discharges: 6420, idn: "University of Maryland Shore Regional Health", idnParent: "University of Maryland Medical System", hcahpsRating: 2, overallRating: 2, readmissionPenalty: "0.00%", estRevenueLoss: "$0", allCauseRate: "12.60%", allCausePercentile: "99", copdRate: "16.90%", hipKneeRate: "5.30%" },
-            { id: "1891", name: "UM Upper Chesapeake Medical Center", type: "Short Term Acute Care Hospital", address: "", city: "Bel Air", state: "MD", revenue: 398557862, beds: 203, discharges: 12299, idn: "University of Maryland Upper Chesapeake Health", idnParent: "University of Maryland Medical System", hcahpsRating: 2, overallRating: 2, readmissionPenalty: "0.00%", estRevenueLoss: "$0", allCauseRate: "14.50%", allCausePercentile: "81", copdRate: "19.10%", hipKneeRate: "5.10%" },
-            { id: "1920", name: "University of Maryland Medical Center", type: "Short Term Acute Care Hospital", address: "", city: "Baltimore", state: "MD", revenue: 2204569824, beds: 767, discharges: 23420, idn: "University of Maryland Medical System", idnParent: "University of Maryland Medical System", hcahpsRating: 3, overallRating: 2, readmissionPenalty: "0.00%", estRevenueLoss: "$0", allCauseRate: "14.30%", allCausePercentile: "88", copdRate: "18.20%", hipKneeRate: "" },
-            { id: "3884", name: "UT Health Pittsburg", type: "Critical Access Hospital", address: "", city: "Pittsburg", state: "TX", revenue: 39334230, beds: 25, discharges: 752, idn: "UT Health East Texas", idnParent: "Ardent", hcahpsRating: 5, overallRating: 2, readmissionPenalty: "0.00%", estRevenueLoss: "$0", allCauseRate: "14.50%", allCausePercentile: "81", copdRate: "", hipKneeRate: "" },
-            { id: "4363", name: "WhidbeyHealth Medical Center", type: "Critical Access Hospital", address: "", city: "Coupeville", state: "WA", revenue: 150916106, beds: 25, discharges: 1163, idn: "", idnParent: "", hcahpsRating: 4, overallRating: 1, readmissionPenalty: "", estRevenueLoss: "", allCauseRate: "15.20%", allCausePercentile: "37", copdRate: "17.50%", hipKneeRate: "" },
-            { id: "1536", name: "William Newton Hospital", type: "Critical Access Hospital", address: "", city: "Winfield", state: "KS", revenue: 50435757, beds: 25, discharges: 1115, idn: "", idnParent: "", hcahpsRating: 3, overallRating: 2, readmissionPenalty: "", estRevenueLoss: "", allCauseRate: "14.60%", allCausePercentile: "77", copdRate: "17.80%", hipKneeRate: "" },
-            { id: "1512", name: "WinnMed (FKA Winneshiek Medical Center)", type: "Critical Access Hospital", address: "", city: "Decorah", state: "IA", revenue: 78726588, beds: 25, discharges: 1117, idn: "Mayo Clinic Health System", idnParent: "Mayo Clinic", hcahpsRating: 4, overallRating: 4, readmissionPenalty: "", estRevenueLoss: "", allCauseRate: "13.80%", allCausePercentile: "97", copdRate: "16.70%", hipKneeRate: "" },
-            { id: "3153", name: "Wise Health System", type: "Short Term Acute Care Hospital", address: "", city: "Decatur", state: "TX", revenue: 495147318, beds: 157, discharges: 8712, idn: "Medical City Healthcare", idnParent: "HCA Healthcare", hcahpsRating: 3, overallRating: 2, readmissionPenalty: "", estRevenueLoss: "", allCauseRate: "15.30%", allCausePercentile: "32", copdRate: "19.20%", hipKneeRate: "4.10%" },
-            { id: "1556", name: "Woodland Heights Medical Center", type: "Short Term Acute Care Hospital", address: "", city: "Lufkin", state: "TX", revenue: 160756314, beds: 118, discharges: 3947, idn: "ScionHealth", idnParent: "ScionHealth", hcahpsRating: 2, overallRating: 2, readmissionPenalty: "", estRevenueLoss: "", allCauseRate: "14.50%", allCausePercentile: "81", copdRate: "20.0%", hipKneeRate: "" },
-            { id: "2867", name: "Wyoming County Community Health System", type: "Short Term Acute Care Hospital", address: "", city: "Warsaw", state: "NY", revenue: 62817812, beds: 47, discharges: 1353, idn: "", idnParent: "", hcahpsRating: 0, overallRating: 2, readmissionPenalty: "", estRevenueLoss: "", allCauseRate: "15.40%", allCausePercentile: "25", copdRate: "18.40%", hipKneeRate: "" },
-            { id: "2258", name: "Yalobusha General Hospital", type: "Critical Access Hospital", address: "", city: "Water Valley", state: "MS", revenue: 9191316, beds: 20, discharges: 183, idn: "", idnParent: "", hcahpsRating: 0, overallRating: 0, readmissionPenalty: "", estRevenueLoss: "", allCauseRate: "15.10%", allCausePercentile: "44", copdRate: "", hipKneeRate: "" },
-            { id: "648", name: "Yavapai Regional Medical Center West", type: "Short Term Acute Care Hospital", address: "", city: "Prescott", state: "AZ", revenue: 542566675, beds: 134, discharges: 10950, idn: "Dignity Health Arizona", idnParent: "CommonSpirit Health", hcahpsRating: 3, overallRating: 3, readmissionPenalty: "", estRevenueLoss: "", allCauseRate: "13.90%", allCausePercentile: "96", copdRate: "16.20%", hipKneeRate: "4.50%" },
-            { id: "2862", name: "York Hospital", type: "Short Term Acute Care Hospital", address: "", city: "York", state: "ME", revenue: 264259838, beds: 48, discharges: 2622, idn: "", idnParent: "", hcahpsRating: 4, overallRating: 4, readmissionPenalty: "", estRevenueLoss: "", allCauseRate: "14.40%", allCausePercentile: "84", copdRate: "18.80%", hipKneeRate: "3.50%" }
-        ];
+        // --- ATTACH CSV DATA HERE ---
+        // Paste your full 880-row CSV content inside the backticks below.
+        // It should start with headers like "Definitive ID,Hospital Name..."
+        const attachedCSV = `Definitive ID,Hospital Name,Hospital Type,Address,City,State,Total Revenues,Staffed Beds,Discharges,IDN,IDN Parent,Patient Survey,Hospital Compare Overall,Readmission Rate Penalty,Revenue Loss,All Cause Hospital-Wide Readmission Rate,All Cause Hospital-Wide Readmission Percentile,COPD,Hip/Knee
+1940,Baystate Medical Center,Short Term Acute Care Hospital,,Springfield,MA,"$1,810,794,512",740,40131,Baystate Health,,2,1,-1.89%,"-$3,486,838",16.40%,4,19.40%,4.40%
+2679,Robert Wood Johnson University Hospital New Brunswick,Short Term Acute Care Hospital,,New Brunswick,NJ,"$1,758,559,120",600,36561,RWJBarnabas Health,RWJBarnabas Health,3,2,-2.14%,"-$3,261,421",15.50%,21,17.50%,5.70%
+2803,Maimonides Medical Center,Short Term Acute Care Hospital,,Brooklyn,NY,"$1,758,189,024",641,28282,Maimonides Health,,2,2,-1.00%,"-$1,200,000",17.20%,1,18.0%,5.0%
+1906,UM Shore Medical Center at Easton,Short Term Acute Care Hospital,,Easton,MD,"$319,601,744",48,6420,University of Maryland Shore Regional Health,University of Maryland Medical System,2,2,0.00%,$0,12.60%,99,16.90%,5.30%
+1891,UM Upper Chesapeake Medical Center,Short Term Acute Care Hospital,,Bel Air,MD,"$398,557,862",203,12299,University of Maryland Upper Chesapeake Health,University of Maryland Medical System,2,2,0.00%,$0,14.50%,81,19.10%,5.10%
+1920,University of Maryland Medical Center,Short Term Acute Care Hospital,,Baltimore,MD,"$2,204,569,824",767,23420,University of Maryland Medical System,University of Maryland Medical System,3,2,0.00%,$0,14.30%,88,18.20%,
+3884,UT Health Pittsburg,Critical Access Hospital,,Pittsburg,TX,"$39,334,230",25,752,UT Health East Texas,Ardent,5,2,0.00%,$0,14.50%,81,,
+4363,WhidbeyHealth Medical Center,Critical Access Hospital,,Coupeville,WA,"$150,916,106",25,1163,,,4,1,,,15.20%,37,17.50%,
+1536,William Newton Hospital,Critical Access Hospital,,Winfield,KS,"$50,435,757",25,1115,,,3,2,,,14.60%,77,17.80%,
+1512,WinnMed (FKA Winneshiek Medical Center),Critical Access Hospital,,Decorah,IA,"$78,726,588",25,1117,Mayo Clinic Health System,Mayo Clinic,4,4,,,13.80%,97,16.70%,
+3153,Wise Health System,Short Term Acute Care Hospital,,Decatur,TX,"$495,147,318",157,8712,Medical City Healthcare,HCA Healthcare,3,2,,,15.30%,32,19.20%,4.10%
+1556,Woodland Heights Medical Center,Short Term Acute Care Hospital,,Lufkin,TX,"$160,756,314",118,3947,ScionHealth,ScionHealth,2,2,,,14.50%,81,20.0%,
+2867,Wyoming County Community Health System,Short Term Acute Care Hospital,,Warsaw,NY,"$62,817,812",47,1353,,,0,2,,,15.40%,25,18.40%,
+2258,Yalobusha General Hospital,Critical Access Hospital,,Water Valley,MS,"$9,191,316",20,183,,,0,0,,,15.10%,44,,
+648,Yavapai Regional Medical Center West,Short Term Acute Care Hospital,,Prescott,AZ,"$542,566,675",134,10950,Dignity Health Arizona,CommonSpirit Health,3,3,,,13.90%,96,16.20%,4.50%
+2862,York Hospital,Short Term Acute Care Hospital,,York,ME,"$264,259,838",48,2622,,,4,4,,,14.40%,84,18.80%,3.50%`;
+
+        let dbData = [];
 
         // --- STATE MANAGEMENT ---
         const state = {
@@ -214,13 +250,15 @@
         }
 
         // --- GLOBAL MODAL FUNCTIONS ---
-        // Defined explicitly in global scope to avoid reference errors
         const modalOverlay = document.getElementById('modal-overlay');
         const modalContent = document.getElementById('modal-content');
         const fitModalOverlay = document.getElementById('fit-modal-overlay');
         const fitModalContent = document.getElementById('fit-modal-content');
 
-        // Functions are hoisted, so these will be available everywhere
+        // Email Modal Globals
+        const emailModalOverlay = document.getElementById('email-modal-overlay');
+        const emailTextarea = document.getElementById('email-textarea');
+
         function openModal(data) {
             const addressDisplay = data.address ? `${data.address}, ${data.city}, ${data.state}` : `${data.city}, ${data.state}`;
             modalContent.innerHTML = `
@@ -327,6 +365,58 @@
             setTimeout(() => { fitModalOverlay.classList.add('hidden'); }, 200);
         }
 
+        // Email Modal Functions
+        function openEmailModal(id) {
+            const item = dbData.find(d => d.id === id);
+            if (!item) return;
+
+            const template = `Good morning {Name},
+
+I’m reaching out regarding ${item.name} ongoing efforts to reduce readmissions, particularly across higher-risk DRGs.
+As you know, ${item.name} is already using CipherRounds to support purposeful rounding enterprise-wide. That same Cipher infrastructure can also support automated post-discharge outreach to identify and intervene with at-risk patients earlier.
+
+For context, Middlesex and Hartford HealthCare have implemented this approach and achieved measurable readmission reductions, including a 3.4% decrease for CHF and a 9.9% decrease for COPD at Middlesex (link to case study here).
+
+Would it make sense to spend 20 minutes reviewing how their workflow and results could translate to ${item.name}?`;
+
+            emailTextarea.value = template;
+            
+            // Close the row action menu
+            const menu = document.getElementById(`action-menu-${id}`);
+            if(menu) menu.classList.add('hidden');
+
+            emailModalOverlay.classList.remove('hidden');
+            setTimeout(() => { emailModalOverlay.classList.remove('opacity-0'); emailModalOverlay.querySelector('div').classList.remove('scale-95'); emailModalOverlay.querySelector('div').classList.add('scale-100'); }, 10);
+        }
+
+        function closeEmailModal() {
+            emailModalOverlay.classList.add('opacity-0');
+            emailModalOverlay.querySelector('div').classList.remove('scale-100');
+            emailModalOverlay.querySelector('div').classList.add('scale-95');
+            setTimeout(() => { emailModalOverlay.classList.add('hidden'); }, 200);
+        }
+
+        function copyEmailToClipboard() {
+            emailTextarea.select();
+            document.execCommand('copy');
+            // Visual feedback could be added here
+            const btn = document.querySelector('#email-modal-content button:last-child');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> Copied!`;
+            setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+        }
+
+        // Action Menu Logic
+        function toggleActionMenu(event, id) {
+            event.stopPropagation();
+            // Close all other menus
+            document.querySelectorAll('[id^="action-menu-"]').forEach(menu => {
+                if (menu.id !== `action-menu-${id}`) menu.classList.add('hidden');
+            });
+            const menu = document.getElementById(`action-menu-${id}`);
+            if (menu) menu.classList.toggle('hidden');
+        }
+
         function openModalById(id) {
             const item = dbData.find(d => d.id === id);
             if (item) openModal(item);
@@ -334,8 +424,65 @@
 
         modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
         fitModalOverlay.addEventListener('click', (e) => { if (e.target === fitModalOverlay) closeFitModal(); });
+        emailModalOverlay.addEventListener('click', (e) => { if (e.target === emailModalOverlay) closeEmailModal(); });
 
-        // --- CSV PARSING ---
+        // Close action menus when clicking anywhere else
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('[id^="action-menu-"]') && !e.target.closest('button[onclick^="toggleActionMenu"]')) {
+                document.querySelectorAll('[id^="action-menu-"]').forEach(menu => menu.classList.add('hidden'));
+            }
+        });
+
+        // --- CSV PARSING AND GENERATION ---
+
+        function downloadCSV() {
+            // Priority 1: Download the exact attached CSV if available (keeps original formatting)
+            if (attachedCSV && attachedCSV.trim().length > 100) {
+                 triggerDownload(attachedCSV, "definitive_hospitals_data.csv");
+                 return;
+            }
+
+            // Priority 2: Generate CSV from current dbData
+            const headers = [
+                'Definitive ID', 'Hospital Name', 'Hospital Type', 'Address', 'City', 'State', 
+                'Total Revenues', 'Staffed Beds', 'Discharges', 'IDN', 'IDN Parent', 
+                'Patient Survey', 'Hospital Compare Overall', 'Readmission Rate Penalty', 
+                'Revenue Loss', 'All Cause Hospital-Wide Readmission Rate', 
+                'All Cause Hospital-Wide Readmission Percentile', 'COPD', 'Hip/Knee'
+            ];
+
+            const escape = (val) => {
+                if (val === null || val === undefined) return '';
+                const str = String(val);
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return `"${str.replace(/"/g, '""')}"`;
+                }
+                return str;
+            };
+
+            const rows = dbData.map(item => [
+                item.id, item.name, item.type, item.address, item.city, item.state,
+                item.revenue, item.beds, item.discharges, item.idn, item.idnParent,
+                item.hcahpsRating, item.overallRating, item.readmissionPenalty, item.estRevenueLoss,
+                item.allCauseRate, item.allCausePercentile, item.copdRate, item.hipKneeRate
+            ].map(escape).join(','));
+
+            const csvContent = [headers.join(','), ...rows].join('\n');
+            triggerDownload(csvContent, "definitive_hospitals_data.csv");
+        }
+
+        function triggerDownload(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         function parseCSV(text) {
             const rows = [];
             let row = [];
@@ -363,6 +510,65 @@
             return rows;
         }
 
+        function processParsedRows(rows) {
+             if (rows.length < 2) return [];
+
+            const header = rows[0].map(h => h.trim().toLowerCase());
+            const getIndex = (keywords) => header.findIndex(h => keywords.some(k => h.includes(k.toLowerCase())));
+
+            const colMap = {
+                id: getIndex(['Definitive ID', 'ID']),
+                name: getIndex(['Hospital Name', 'Name']),
+                type: getIndex(['Hospital Type', 'Type']),
+                address: getIndex(['Address']),
+                city: getIndex(['City']),
+                state: getIndex(['State']),
+                revenue: getIndex(['Total Revenues', 'Revenue']),
+                beds: getIndex(['Staffed Beds', 'Beds']),
+                discharges: getIndex(['Discharges']),
+                idn: getIndex(['IDN', 'Network']),
+                idnParent: getIndex(['IDN Parent', 'Parent']),
+                hcahps: getIndex(['Patient Survey', 'HCAHPS']),
+                overall: getIndex(['Hospital Compare Overall', 'Overall Rating']),
+                penalty: getIndex(['Penalty', 'Readmission Rate Penalty']),
+                loss: getIndex(['Loss', 'Revenue Loss']),
+                allCauseRate: getIndex(['All Cause Hospital-Wide Readmission Rate', 'All Cause', 'Wide Readmission Rate']),
+                allCausePercentile: getIndex(['All Cause Hospital-Wide Readmission Percentile', 'All Cause Percentile']),
+                copdRate: getIndex(['COPD', 'Obstructive Pulmonary']),
+                hipKneeRate: getIndex(['Hip/Knee', 'Hip', 'Knee'])
+            };
+
+            return rows.slice(1).map(row => {
+                if (row.length < 5) return null; 
+                const getVal = (idx) => idx !== -1 && row[idx] ? row[idx] : '';
+                const cleanMoney = (val) => val ? parseInt(val.replace(/[$,]/g, '')) : 0;
+                const cleanInt = (val) => val ? parseInt(val.replace(/,/g, '')) : 0;
+                const cleanRating = (val) => { const parsed = parseInt(val); return isNaN(parsed) ? 0 : parsed; }
+
+                return {
+                    id: getVal(colMap.id),
+                    name: getVal(colMap.name),
+                    type: getVal(colMap.type),
+                    address: getVal(colMap.address),
+                    city: getVal(colMap.city),
+                    state: getVal(colMap.state),
+                    revenue: cleanMoney(getVal(colMap.revenue)),
+                    beds: cleanInt(getVal(colMap.beds)),
+                    discharges: cleanInt(getVal(colMap.discharges)),
+                    idn: getVal(colMap.idn),
+                    idnParent: getVal(colMap.idnParent),
+                    hcahpsRating: cleanRating(getVal(colMap.hcahps)),
+                    overallRating: cleanRating(getVal(colMap.overall)),
+                    readmissionPenalty: getVal(colMap.penalty),
+                    estRevenueLoss: getVal(colMap.loss),
+                    allCauseRate: getVal(colMap.allCauseRate),
+                    allCausePercentile: getVal(colMap.allCausePercentile),
+                    copdRate: getVal(colMap.copdRate),
+                    hipKneeRate: getVal(colMap.hipKneeRate)
+                };
+            }).filter(item => item !== null);
+        }
+
         function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -370,63 +576,7 @@
             reader.onload = function(e) {
                 const text = e.target.result;
                 const rows = parseCSV(text);
-                if (rows.length < 2) return; 
-
-                const header = rows[0].map(h => h.trim().toLowerCase());
-                const getIndex = (keywords) => header.findIndex(h => keywords.some(k => h.includes(k.toLowerCase())));
-
-                const colMap = {
-                    id: getIndex(['Definitive ID', 'ID']),
-                    name: getIndex(['Hospital Name', 'Name']),
-                    type: getIndex(['Hospital Type', 'Type']),
-                    address: getIndex(['Address']),
-                    city: getIndex(['City']),
-                    state: getIndex(['State']),
-                    revenue: getIndex(['Total Revenues', 'Revenue']),
-                    beds: getIndex(['Staffed Beds', 'Beds']),
-                    discharges: getIndex(['Discharges']),
-                    idn: getIndex(['IDN', 'Network']),
-                    idnParent: getIndex(['IDN Parent', 'Parent']),
-                    hcahps: getIndex(['Patient Survey', 'HCAHPS']),
-                    overall: getIndex(['Hospital Compare Overall', 'Overall Rating']),
-                    penalty: getIndex(['Penalty', 'Readmission Rate Penalty']),
-                    loss: getIndex(['Loss', 'Revenue Loss']),
-                    allCauseRate: getIndex(['All Cause Hospital-Wide Readmission Rate', 'All Cause', 'Wide Readmission Rate']),
-                    allCausePercentile: getIndex(['All Cause Hospital-Wide Readmission Percentile', 'All Cause Percentile']),
-                    copdRate: getIndex(['COPD', 'Obstructive Pulmonary']),
-                    hipKneeRate: getIndex(['Hip/Knee', 'Hip', 'Knee'])
-                };
-
-                const newData = rows.slice(1).map(row => {
-                    if (row.length < 5) return null; 
-                    const getVal = (idx) => idx !== -1 && row[idx] ? row[idx] : '';
-                    const cleanMoney = (val) => val ? parseInt(val.replace(/[$,]/g, '')) : 0;
-                    const cleanInt = (val) => val ? parseInt(val.replace(/,/g, '')) : 0;
-                    const cleanRating = (val) => { const parsed = parseInt(val); return isNaN(parsed) ? 0 : parsed; }
-
-                    return {
-                        id: getVal(colMap.id),
-                        name: getVal(colMap.name),
-                        type: getVal(colMap.type),
-                        address: getVal(colMap.address),
-                        city: getVal(colMap.city),
-                        state: getVal(colMap.state),
-                        revenue: cleanMoney(getVal(colMap.revenue)),
-                        beds: cleanInt(getVal(colMap.beds)),
-                        discharges: cleanInt(getVal(colMap.discharges)),
-                        idn: getVal(colMap.idn),
-                        idnParent: getVal(colMap.idnParent),
-                        hcahpsRating: cleanRating(getVal(colMap.hcahps)),
-                        overallRating: cleanRating(getVal(colMap.overall)),
-                        readmissionPenalty: getVal(colMap.penalty),
-                        estRevenueLoss: getVal(colMap.loss),
-                        allCauseRate: getVal(colMap.allCauseRate),
-                        allCausePercentile: getVal(colMap.allCausePercentile),
-                        copdRate: getVal(colMap.copdRate),
-                        hipKneeRate: getVal(colMap.hipKneeRate)
-                    };
-                }).filter(item => item !== null);
-
+                const newData = processParsedRows(rows);
                 if (newData.length > 0) {
                     dbData = newData;
                     state.filters = { states: [], ratings: [], overallRatings: [], types: [] };
@@ -535,6 +685,12 @@
 
         // --- GLOBAL EVENT LISTENERS ---
         window.addEventListener('DOMContentLoaded', () => {
+            // Initialize: Check attached CSV
+            if (attachedCSV && attachedCSV.trim().length > 100) {
+                 const rows = parseCSV(attachedCSV);
+                 dbData = processParsedRows(rows);
+            }
+
             document.getElementById('search-input').addEventListener('input', (e) => { state.searchTerm = e.target.value; renderList(); });
             document.getElementById('sort-select').addEventListener('change', (e) => { state.sortBy = e.target.value; renderList(); });
             document.getElementById('clear-filters-btn').addEventListener('click', () => {
@@ -577,7 +733,7 @@
 
             data.forEach(item => {
                 const card = document.createElement('div');
-                card.className = 'group relative bg-white hover:bg-gray-50 border border-gray-200 hover:border-indigo-300 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 cursor-pointer flex flex-col md:flex-row items-start md:items-center p-4 gap-4 slide-up';
+                card.className = 'group relative bg-white hover:bg-gray-50 border border-gray-200 hover:border-indigo-300 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 cursor-pointer flex flex-col md:flex-row items-start md:items-center p-4 gap-4 slide-up';
                 card.dataset.id = item.id;
                 
                 const fitAnalysis = calculateCipherFit(item);
@@ -615,6 +771,24 @@
                         <div class="flex flex-col items-center justify-center h-full w-full py-2 hover:bg-gray-50 transition-colors rounded-r-xl">
                             <div class="mb-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${badgeClass}">Fit: ${fitAnalysis.score}</div>
                             <div class="p-1.5 rounded-full text-gray-400 group-hover/icon:text-indigo-600 transition-colors"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg></div>
+                        </div>
+                    </div>
+
+                    <!-- Actions Dropdown -->
+                    <div class="relative ml-2 md:ml-4 border-l border-gray-200 pl-4 h-full flex items-center">
+                        <button onclick="toggleActionMenu(event, '${item.id}')" class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors focus:outline-none">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                            </svg>
+                        </button>
+                        <!-- Dropdown Menu -->
+                        <div id="action-menu-${item.id}" class="hidden absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-lg shadow-xl z-20 overflow-hidden transform transition-all origin-top-right">
+                             <div class="py-1">
+                                <button onclick="openEmailModal('${item.id}')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                                    Generate Email
+                                </button>
+                             </div>
                         </div>
                     </div>
                 `;
