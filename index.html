@@ -149,7 +149,7 @@
              <div class="border-b border-gray-100 p-4 flex justify-between items-center bg-gray-50 rounded-t-xl">
                 <h3 class="font-bold text-gray-800 flex items-center gap-2">
                     <svg class="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                    Generate Email
+                    <span id="email-modal-title">Generate Email</span>
                 </h3>
                 <button onclick="closeEmailModal()" class="text-gray-400 hover:text-gray-600"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
              </div>
@@ -365,10 +365,29 @@
             setTimeout(() => { fitModalOverlay.classList.add('hidden'); }, 200);
         }
 
+        // --- NEW ACTIONS FUNCTIONS ---
+
+        function findExecutives(name) {
+            // Searches LinkedIn for people at this hospital with specific titles
+            // Requires the user to be logged into LinkedIn in their browser
+            const query = `${name} (CNO OR "Chief Nursing Officer" OR "VP of Quality" OR "Chief Patient Experience Officer" OR "Chief Medical Officer")`;
+            const url = `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(query)}`;
+            window.open(url, '_blank');
+        }
+
+        function searchNews(name) {
+            // Opens Google News search
+            const url = `https://www.google.com/search?q=${encodeURIComponent(name)}&tbm=nws`;
+            window.open(url, '_blank');
+        }
+
         // Email Modal Functions
         function openEmailModal(id) {
             const item = dbData.find(d => d.id === id);
             if (!item) return;
+
+            // Set Title
+            document.getElementById('email-modal-title').textContent = "Current Rounding Client Email";
 
             const template = `Good morning {Name},
 
@@ -381,6 +400,39 @@ Would it make sense to spend 20 minutes reviewing how their workflow and results
 
             emailTextarea.value = template;
             
+            // Close the row action menu
+            const menu = document.getElementById(`action-menu-${id}`);
+            if(menu) menu.classList.add('hidden');
+
+            emailModalOverlay.classList.remove('hidden');
+            setTimeout(() => { emailModalOverlay.classList.remove('opacity-0'); emailModalOverlay.querySelector('div').classList.remove('scale-95'); emailModalOverlay.querySelector('div').classList.add('scale-100'); }, 10);
+        }
+
+        function openColdEmailModal(id) {
+            const item = dbData.find(d => d.id === id);
+            if (!item) return;
+
+            // Set Title
+            document.getElementById('email-modal-title').textContent = "Cold Prospecting Email";
+
+            // Safe fallback for null values
+            const penalty = item.readmissionPenalty || "current";
+            const loss = item.estRevenueLoss || "financial";
+
+            const template = `Subject: Reducing readmission penalties at ${item.name}
+
+Good morning {Name},
+
+I noticed that ${item.name} is currently facing a readmission penalty of ${penalty} and a potential revenue loss of ${loss} based on the latest data.
+
+Other health systems facing similar challenges have successfully reduced their readmissions by deploying automated outreach to at-risk patients post-discharge. For example, Middlesex Hospital reduced COPD readmissions by 9.9% using this approach.
+
+Are you open to a brief conversation about how this specific workflow might help mitigate these penalties at ${item.name}?
+
+Best,`;
+
+            emailTextarea.value = template;
+
             // Close the row action menu
             const menu = document.getElementById(`action-menu-${id}`);
             if(menu) menu.classList.add('hidden');
@@ -782,11 +834,24 @@ Would it make sense to spend 20 minutes reviewing how their workflow and results
                             </svg>
                         </button>
                         <!-- Dropdown Menu -->
-                        <div id="action-menu-${item.id}" class="hidden absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-lg shadow-xl z-20 overflow-hidden transform transition-all origin-top-right">
+                        <div id="action-menu-${item.id}" class="hidden absolute right-0 top-full mt-2 w-56 bg-white border border-gray-100 rounded-lg shadow-xl z-20 overflow-hidden transform transition-all origin-top-right">
                              <div class="py-1">
                                 <button onclick="openEmailModal('${item.id}')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                                    Generate Email
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                                    Rounding Client Email
+                                </button>
+                                <button onclick="openColdEmailModal('${item.id}')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>
+                                    Cold Prospecting Email
+                                </button>
+                                <div class="border-t border-gray-100 my-1"></div>
+                                <button onclick="findExecutives('${item.name}')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                                    Find Executives
+                                </button>
+                                <button onclick="searchNews('${item.name}')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /></svg>
+                                    Search News
                                 </button>
                              </div>
                         </div>
